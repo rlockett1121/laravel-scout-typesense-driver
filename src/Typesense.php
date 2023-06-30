@@ -186,16 +186,25 @@ class Typesense
      */
     public function importDocuments(Collection $collectionIndex, $documents, string $action = 'upsert'): \Illuminate\Support\Collection
     {
-        $importedDocuments = $collectionIndex->getDocuments()
-                                             ->import($documents, ['action' => $action]);
+
+        $importedDocuments = [];
+
+        foreach ($documents as $document) {
+            $documentJson = json_encode($document, JSON_THROW_ON_ERROR);
+            $importedDocuments[] = $collectionIndex->getDocuments()->import($documentJson);
+        }
 
         $result = [];
+
         foreach ($importedDocuments as $importedDocument) {
-            if (!$importedDocument['success']) {
-                throw new TypesenseClientError("Error importing document: {$importedDocument['error']}");
+
+            $importedDocumentDecoded = json_decode($importedDocument, true, 512, JSON_THROW_ON_ERROR);
+
+            if (!$importedDocumentDecoded['success']) {
+                throw new TypesenseClientError("Error importing document: {$importedDocumentDecoded['error']}");
             }
 
-            $result[] = new TypesenseDocumentIndexResponse($importedDocument['code'] ?? 0, $importedDocument['success'], $importedDocument['error'] ?? null, json_decode($importedDocument['document'] ?? '[]', true, 512, JSON_THROW_ON_ERROR));
+            $result[] = new TypesenseDocumentIndexResponse($importedDocumentDecoded['code'] ?? 0, $importedDocumentDecoded['success'], $importedDocumentDecoded['error'] ?? null, json_decode($importedDocumentDecoded['document'] ?? '[]', true, 512, JSON_THROW_ON_ERROR));
         }
 
         return collect($result);
