@@ -40,11 +40,6 @@ class TypesenseEngine extends Engine
     /**
      * @var string
      */
-    private string $textMatchType = 'max_score ';
-
-    /**
-     * @var string
-     */
     private string $startTag = '<mark>';
 
     /**
@@ -247,8 +242,12 @@ class TypesenseEngine extends Engine
             'prioritize_exact_match'     => $this->prioritizeExactMatch,
             'enable_overrides'           => $this->enableOverrides,
             'highlight_affix_num_tokens' => $this->highlightAffixNumTokens,
-            'text_match_type'            => $this->textMatchType
         ];
+
+
+        if(count($builder->options)>0){
+            $params = array_merge($params, $builder->options);
+        }
 
         if ($this->limitHits > 0) {
             $params['limit_hits'] = $this->limitHits;
@@ -581,20 +580,6 @@ class TypesenseEngine extends Engine
     public function groupByLimit(int $groupByLimit): static
     {
         $this->groupByLimit = $groupByLimit;
-
-        return $this;
-    }
-
-    /**
-     * The method we use to calculate the match score of a document. (default: max_score).
-     *
-     * @param string $startTag
-     *
-     * @return $this
-     */
-    public function setTextMatchType(string $textMatchType): static
-    {
-        $this->textMatchType = $textMatchType;
 
         return $this;
     }
